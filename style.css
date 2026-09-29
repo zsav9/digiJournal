@@ -1,0 +1,131 @@
+:root{--bg:#e9e6df;--ink:#2b2b2b;--pw:794px;--ph:1123px
+}
+
+*{box-sizing:border-box
+}
+body{margin:0;
+  font-family:system-ui,
+  sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  height:100vh;
+  display:flex;
+  flex-direction:column
+}
+header{display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+  padding:8px 12px;
+  background:#fff;
+  border-bottom:1px solid #ccc
+}
+h1{font-size:18px;margin:0 8px 0 0
+}
+
+button,.upload{font:inherit;padding:6px 10px;border:1px solid #bbb;background:#fafafa;border-radius:8px;cursor:pointer}
+button:hover,.upload:hover{background:#eee}
+.primary{background:#2b2b2b;color:#fff;border-color:#2b2b2b}
+.sep{flex:1
+}
+
+main{flex:1;display:flex;min-height:0
+}
+
+aside{width:220px;
+  padding:12px;
+  background:#fff;
+  border-right:1px solid #ccc;
+  overflow:auto
+}
+
+aside h2{margin:0 0 4px;font-size:15px
+}
+.hint{font-size:12px;
+  color:#777;
+  margin:0 0 8px
+}
+.upload{display:block;
+  text-align:center;
+  margin-bottom:10px
+}
+#tray{display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px
+}
+#tray img{width:100%;aspect-ratio:1;object-fit:contain;background:#f3f3f3;border-radius:8px;cursor:grab;padding:4px
+}
+#pages{flex:1;
+  overflow:auto;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:24px
+}
+.page{position:relative;
+  width:var(--pw);
+  height:var(--ph);
+  flex:none;
+  background-color:#fff;
+  box-shadow:0 4px 16px #0003;
+  overflow:hidden;
+  outline:3px solid transparent}
+
+.page.current{outline-color:#6a8dff}
+
+.page.lined{background-image:linear-gradient(transparent 31px,rgba(0,0,0,.18) 31px);
+  background-size:100% 32px;
+  background-position:0 64px
+}
+
+.item{position:absolute;
+  cursor:move;
+  touch-action:none;
+  user-select:none
+}
+
+.item img{width:100%;
+  display:block;
+  pointer-events:none
+}
+
+.item .h{display:none;
+  position:absolute;
+  right:-8px;bottom:-8px;
+  width:16px;height:16px;
+  background:#6a8dff;
+  border-radius:50%;
+  cursor:nwse-resize}
+
+.item.sel{outline:2px dashed #6a8dff}.item.sel .h{display:block}
+
+@media(max-width:700px){aside{width:120px}#tray{grid-template-columns:1fr}}
+@media print{
+  @page{size:A4;
+    margin:0}
+  body{display:block;
+    height:auto;
+    background:#fff}
+  header,aside{display:none}
+  main,#pages{display:block;
+    padding:0;
+    overflow:visible}
+  .page{box-shadow:none;
+    outline:none;
+    break-after:page;
+    margin:0;
+    width:210mm;
+    height:297mm;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;zoom:calc(1122.5/1123)}
+  .item.sel{outline:none}.item .h{display:none!important}
+}
+.text{position:absolute;
+  inset:0;
+  padding:64px 48px;
+  outline:none;
+  font:22px/32px "Segoe Print","Bradley Hand","Comic Sans MS",cursive;
+  color:#2b2b2b;
+  white-space:pre-wrap;
+  overflow:hidden;
+  cursor:text}

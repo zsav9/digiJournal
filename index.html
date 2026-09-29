@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>digiJournal</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>digiJournal</h1>
+  <label>page color<input type="color" id="color" value="#fff4c2"></label>
+  <label><input type="checkbox" id="lined" checked> Lined?</label>
+  <button id="addPage">+ add page</button>
+  <button id="delPage">- remove page</button>
+  <span class="sep"></span>
+  <button id="rotL">⟲</button><button id="rotR">⟳</button>
+  <button id="front">bring to front</button><button id="delItem">delete item</button>
+  <span class="sep"></span>
+  <button id="png">save as png</button>
+  <button id="print" class="primary">print / pdf</button>
+</header>
+<main>
+  <aside>
+    <h2>stickers !</h2>
+    <p class="hint">drag or click to add</p>
+    <label class="upload">＋ add ur own
+      <input type="file" id="file" accept="image/*" multiple hidden>
+    </label>
+    <div id="tray"></div>
+  </aside>
+  <section id="pages"></section>
+</main>
+<script src="stickers.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

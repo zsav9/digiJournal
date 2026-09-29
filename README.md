@@ -1,2 +1,4 @@
 # digiJournal
-a digital journal site
+a digital journal site.
+
+Currently testing!

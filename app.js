@@ -41,6 +41,31 @@ function select(element) {
   selectElement = element; if (element) element.classList.add('sel');
 }
 
+const hist = [], redoStack = [];
+const state = () => JSON.stringify([...document.querySelectorAll('.page')].map(p =>
+  [...p.querySelectorAll('.item')].map(el => ({
+    src: el.querySelector('img').getAttribute('src'),
+    x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth,
+    rot: +el.dataset.rot, flip: +el.dataset.flip
+  }))));
+function commit(before){
+  if(before === state()) return;
+  hist.push(before); redoStack.length = 0;
+  if(hist.length > 100) hist.shift();
+}
+const act = fn => { const b = state(); fn(); commit(b); };
+function restore(s){
+  const data = JSON.parse(s); select(null);
+  document.querySelectorAll('.page').forEach((p, i) => {
+    p.querySelectorAll('.item').forEach(e => e.remove());
+    (data[i] || []).forEach(o => addItem(p, o.src, o.x, o.y, o));
+  });
+  select(null);
+}
+function undo(){ if(!hist.length) return; redoStack.push(state()); restore(hist.pop()); }
+function redo(){ if(!redoStack.length) return; hist.push(state()); restore(redoStack.pop()); }
+const applyT = el => el.style.transform = `rotate(${el.dataset.rot}deg) scaleX(${el.dataset.flip})`;
+
 function addItem(page, src, x, y) {
   const element = document.createElement('div');
   element.className = 'item'; element.dataset.rot = 0;

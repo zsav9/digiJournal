@@ -19,7 +19,7 @@ function addPage() {
     e.preventDefault();
     const src = e.dataTransfer.getData('text/plain'); if (!src) return;
     const r = p.getBoundingClientRect();
-    addItem(p, src, e.clientX - r.left - 75, e.clientY - r.top - 75);
+    act(() => addItem(p, src, e.clientX - r.left - 75, e.clientY - r.top - 75));
   });
   pagesEl.appendChild(p); paint(p); SetCurrentPage(p);
   p.scrollIntoView({ behavior: 'smooth' 
@@ -66,32 +66,37 @@ function undo(){ if(!hist.length) return; redoStack.push(state()); restore(hist.
 function redo(){ if(!redoStack.length) return; hist.push(state()); restore(redoStack.pop()); }
 const applyT = el => el.style.transform = `rotate(${el.dataset.rot}deg) scaleX(${el.dataset.flip})`;
 
-function addItem(page, src, x, y) {
-  const element = document.createElement('div');
-  element.className = 'item'; element.dataset.rot = 0;
-  element.style.cssText = `left:${x}px;top:${y}px;width:150px`;
-  element.innerHTML = `<img src="${src}" draggable="false"><i class="h"></i>`;
-  element.addEventListener('pointerdown', e => {
-    e.stopPropagation(); SetCurrentPage(page); select(element);
+function addItem(page, src, x, y, o = {}){
+  const el = document.createElement('div');
+  el.className = 'item';
+  el.dataset.rot = o.rot || 0; el.dataset.flip = o.flip || 1;
+  el.style.cssText = `left:${x}px;top:${y}px;width:${o.w || 150}px`;
+  el.innerHTML = `<img src="${src}" draggable="false"><i class="h"></i>`;
+  applyT(el);
+  el.addEventListener('pointerdown', e => {
+    e.stopPropagation(); SetCurrentPage(page); select(el);
+    const before = state();
     const resize = e.target.classList.contains('h');
-    const sx = e.clientX, sy = e.clientY, ox = element.offsetLeft, oy = element.offsetTop, ow = element.offsetWidth;
+    const sx = e.clientX, sy = e.clientY, ox = el.offsetLeft, oy = el.offsetTop, ow = el.offsetWidth;
     const mv = ev => {
-      if (resize) element.style.width = Math.max(30, ow + ev.clientX - sx) + 'px';
-      else { element.style.left = ox + ev.clientX - sx + 'px'; element.style.top = oy + ev.clientY - sy + 'px'; }
+      if(resize) el.style.width = Math.max(30, ow + ev.clientX - sx) + 'px';
+      else { el.style.left = ox + ev.clientX - sx + 'px'; el.style.top = oy + ev.clientY - sy + 'px'; }
     };
-    const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); };
+    const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); commit(before); };
     addEventListener('pointermove', mv); addEventListener('pointerup', up);
   });
-  page.appendChild(element); select(element);
+  page.appendChild(el); select(el);
 }
-const rotate = d => { if (!selectElement) return; const r = (+selectElement.dataset.rot + d); selectElement.dataset.rot = r; selectElement.style.transform = `rotate(${r}deg)`; };
-const delItem = () => { if (selectElement) { selectElement.remove(); selectElement = null; } };
+
+const rotate = d => { if (selectElement) act(() => { selectElement.dataset.rot = +selectElement.dataset.rot + d; applyT(selectElement); }); };
+const flip = () => { if (selectElement) act(() => { selectElement.dataset.flip = -selectElement.dataset.flip; applyT(selectElement); }); };
+const delItem = () => { if (selectElement) act(() => { selectElement.remove(); selectElement = null; }); };
 
 function addToTray(src) {
   const img = document.createElement('img');
   img.src = src; img.draggable = true;
   img.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', src));
-  img.addEventListener('click', () => addItem(cur, src, 300, 400));
+  img.addEventListener('click', () => act(() => addItem(cur, src, 300, 400)));
   tray.appendChild(img);
 }
 
@@ -110,6 +115,7 @@ $('#lined').addEventListener('change', e => {
 $('#addPage').onclick = addPage;
 $('#delPage').onclick = () => {
   if (document.querySelectorAll('.page').length < 2) return;
+  hist.length = 0; redoStack.length = 0;
   const next = cur.previousElementSibling || cur.nextElementSibling; 
   cur.remove(); select(null); 
   SetCurrentPage(next);
@@ -117,10 +123,16 @@ $('#delPage').onclick = () => {
 
 $('#rotL').onclick = () => rotate(-15);
 $('#rotR').onclick = () => rotate(15);
-$('#front').onclick = () => selectElement && selectElement.parentElement.appendChild(selectElement);
+$('#front').onclick = () => selectElement && act(() => selectElement.parentElement.appendChild(selectElement));
+$('#flip').onclick = flip;
+$('#undo').onclick = undo;
+$('#redo').onclick = redo;
 $('#delItem').onclick = delItem;
 addEventListener('keydown', e => {
   if (e.target.isContentEditable) return;
+  const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
+  if (mod && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if (mod && k === 'y') { e.preventDefault(); redo(); return; }
   if (e.key === 'Delete' || e.key === 'Backspace') delItem();
 });
 
@@ -160,7 +172,8 @@ $('#png').onclick = async () => {
       for (const it of p.querySelectorAll('.item')) {
         const im = it.querySelector('img'), w = it.offsetWidth, h = it.offsetHeight;
         g.save(); g.translate(it.offsetLeft + w / 2, it.offsetTop + h / 2);
-        g.rotate(+it.dataset.rot * Math.PI / 180); g.drawImage(im, -w / 2, -h / 2, w, h); g.restore();
+        g.rotate(+it.dataset.rot * Math.PI / 180); g.scale(+it.dataset.flip, 1);
+        g.drawImage(im, -w / 2, -h / 2, w, h); g.restore();
       }
       const a = document.createElement('a');
       a.href = c.toDataURL('image/png'); a.download = `digijournal-${n++}.png`; a.click();
